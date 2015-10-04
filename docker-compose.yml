@@ -21,7 +21,7 @@ nginx:
     - web
   links:
     - web:web 
-	
+
 data:
   restart: always
   image: postgres:latest
