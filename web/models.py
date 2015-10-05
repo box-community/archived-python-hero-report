@@ -23,7 +23,7 @@ class Stat(db.Model):
 	__tablename__ = 'stats'
 
 	id = db.Column(db.Integer, primary_key=True)
-	measure = db.Column(db.Integer, nullable=False)
+	measure = db.Column(db.String, nullable=False)
 	value = db.Column(db.Float, nullable=False)
 	starting = db.Column(db.DateTime, nullable=False)
 	ending = db.Column(db.DateTime, nullable=False)
