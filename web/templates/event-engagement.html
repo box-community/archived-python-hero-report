@@ -9,9 +9,8 @@
 {% block js %}
 <script language="javascript">
 $(function () {
-    //events = ['UPLOAD', 'DOWNLOAD', 'DELETE', 'COLLABORATION_INVITE','COLLABORATION_ACCEPT'],
-    events = ['UPLOAD', 'DOWNLOAD', 'DELETE'],
-    display_name = ['Uploads', 'Downloads', 'Deletes']
+    events = ['LOGIN','COLLABORATION_INVITE','COLLABORATION_ACCEPT'],
+    display_name = ['Logins','Collab Invites', 'Collab Accepts']
     chartsCreated = false;
      
     setSeries = function() {
@@ -39,27 +38,25 @@ $(function () {
         }
         
         createChart(series);
-        //createShortRangeChart(series);
     }
     
     function updateCharts(data){
-        console.log('updating charts')
         var chart = $("#chart").highcharts(); 
         for (i=0; i < data.length; i++){
             chart.series[i].setData(data[i], true);
         }
     }
-
+    
     // create the chart when all data is loaded
     function createChart(series) {
         $('#chart').highcharts('StockChart', {
             title : {
-                text : "File Activity"
+                text : "Engagement Events"
             },
             rangeSelector: {
                 buttons: [{
                         count: 1,
-                        type: 'd',
+                        type: 'day',
                         text: '1d'
                     },{
                         type: 'month',
@@ -85,32 +82,6 @@ $(function () {
                         text: 'All'
                     }],
                 inputEnabled: true,
-                selected: 0
-            },
-            tooltip: {
-                pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b><br/>',
-                valueDecimals: 0
-            },
-            legend: {
-                enabled: true,
-                layout: 'vertical',
-                align: 'right',
-                verticalAlign: 'middle',
-                borderWidth: 0
-            },
-            series: series
-        });
-    };
-
-    function createShortRangeChart(series) {
-        $('#container_6H').highcharts('StockChart', {           
-            rangeSelector: {
-                buttons: [{
-                    count: 10,
-                    type: 'minute',
-                    text: '10m'
-                }],
-                inputEnabled: false,
                 selected: 0
             },
             tooltip: {

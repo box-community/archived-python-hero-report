@@ -45,15 +45,15 @@ def import_tokens():
 	box.import_tokens();
 	return redirect('/', code=302)
 
-@app.route('/velocity/file', methods=['GET'])
+@app.route('/event/file', methods=['GET'])
 def velocity_file():
-	return render_template('velocity-file.html')
+	return render_template('event-file.html')
 
-@app.route('/velocity/engagement', methods=['GET'])
+@app.route('/event/engagement', methods=['GET'])
 def velocity_engagement():
-	return render_template('velocity-engagement.html')
+	return render_template('event-engagement.html')
 
-@app.route('/velocity/stat', methods=['GET'])
+@app.route('/event/stat', methods=['GET'])
 def velocity():
 	result = []
 	epoch = datetime.datetime.utcfromtimestamp(0)

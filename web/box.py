@@ -36,7 +36,7 @@ class Box(object):
 	def client(self):
 		try:
 			return Client(self.oauth2())
-		except Exception as e:
+		except:
 			self.logger.warn('Client could not be created because credentails are not present.')
 			return None
 
