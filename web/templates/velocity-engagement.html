@@ -44,7 +44,7 @@ $(function () {
         console.log('updating charts')
         var chart = $("#chart").highcharts(); 
         for (i=0; i < data.length; i++){
-            chart.series[i].setData(data[i], false);
+            chart.series[i].setData(data[i], true);
         }
     }
     

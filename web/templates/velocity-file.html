@@ -46,18 +46,10 @@ $(function () {
         console.log('updating charts')
         var chart = $("#chart").highcharts(); 
         for (i=0; i < data.length; i++){
-            chart.series[i].setData(data[i], false);
+            chart.series[i].setData(data[i], true);
         }
     }
 
-    function addDataPoint(dataPoint, chartId){
-        var series = $("#chart").highcharts().series[i]
-        if (series.data[series.data.length-1].x != dataPoint[0])
-        {
-            series.addPoint(dataPoint, true, true);
-        }
-    }
-    
     // create the chart when all data is loaded
     function createChart(series) {
         $('#chart').highcharts('StockChart', {
