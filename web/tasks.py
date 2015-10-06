@@ -15,7 +15,7 @@ from models import Stat
 
 class BackgroundTasks(object):
 	
-	velocity_event_types=['UPLOAD','DOWNLOAD','DELETE','COLLABORATION_INVITE','COLLABORATION_ACCEPT']
+	velocity_event_types=['UPLOAD','DOWNLOAD','DELETE','COLLABORATION_INVITE','COLLABORATION_ACCEPT','LOGIN']
 	limit = 500
 	
 	def __init__(self, logger):
@@ -63,4 +63,5 @@ class BackgroundTasks(object):
 	def schedule(self):
 		self.logger.info("Starting scheduler")
 		self.scheduler.start()
-		self.scheduler.add_job(self.record_velocity, 'interval', minutes=1)		
+		self.scheduler.add_job(self.record_velocity, 'interval', minutes=1)
+		self.record_velocity()
