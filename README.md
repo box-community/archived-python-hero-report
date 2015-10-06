@@ -41,20 +41,33 @@ To see how to connect Docker to this machine, run: docker-machine env test
 ```
 $ eval "$(docker-machine env dev)"
 ```
-1. Change to the directory when you cloned this repo
-  * `$ cd ~/Documents/github/box-hero-report`
-1. Build the Docker container. This may take a bit.
-  * `box-hero-report$ docker-compose build`
-  * `box-hero-report$ docker-compose up -d`
-
+* Change to the directory when you cloned this repo
+```
+$ cd ~/Documents/github/box-hero-report
+box-hero-report$ 
+```
+* Build the Docker container. This may take a bit.
+```
+$ box-hero-report$ docker-compose build
+..... lots of stuff happens .....
+$ box-hero-report$ docker-compose up -d
+..... lots of stuff happens .....
+```
 ### Run The Application 
 
-1. Create the database
-  * `box-hero-report$ docker-compose run web /usr/local/bin/python create_db.py`
-1. List your Docker VMs and view the IP address for `dev`. Open that IP address in a browser.
-  * `$ docker-machine ls`
-1. Click the `Import Tokens` button at the top right of the screen to save your tokens to the database.
-1. The screen should refresh and the app should begin pulling data from Box and storing them in the database. The graphs will dynamically update with new data once per minute. The app will continue to pull data until the container is shut down.
+* Create the database
+```
+box-hero-report$ docker-compose run web /usr/local/bin/python create_db.py
+```
+* List your Docker VMs and view the IP address for `dev` under the *URL* column. Open that IP address in a browser. The application is hosted on port 80.
+```
+box-hero-report$ docker-machine ls
+NAME      ACTIVE   DRIVER       STATE     URL                         SWARM
+default            virtualbox   Stopped                               
+dev       *        virtualbox   Running   tcp://192.168.99.100:2376   
+```
+* Click the `Import Tokens` button at the top right of the screen to save your tokens to the database.
+* The screen should refresh and the app should begin pulling data from Box and storing them in the database. The graphs will dynamically update with new data once per minute. The app will continue to pull data until the container is shut down.
 
 Notes:
 * To view Docker logs: `$ docker-compose logs`
