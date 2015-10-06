@@ -73,3 +73,37 @@ Notes:
 * To view Docker logs: `$ docker-compose logs`
 * To deploy changes, re-run steps 7-8.
 
+## API
+
+An API is exposed so that external applications can pull reporting data.
+
+### Events
+
+* Endpoint: <host>/event/stat?event_type=<event_types>
+* Supported <event_types>: 
+  * UPLOAD
+  * DOWNLOAD
+  * DELETE
+  * LOGIN 
+  * COLLABORATION_INVITE
+  * COLLABORATION_ACCEPT
+* Result: An array of array of event datapoints, where a datapoint is a `tick` (ms from epoch) and a `count`
+
+#### Example
+```
+GET http://host/event/stat?event_type=UPLOAD,DOWNLOAD
+
+[
+  [ 
+    /* UPLOAD events        */
+    /* tick,          count */
+    [1444156320000.0, 110.0], 
+    [1444156380000.0, 121.0]
+  ],
+  [ 
+    /* DOWNLOAD events      */
+    [1444156320000.0, 195.0], 
+    [1444156380000.0, 201.0]
+  ]
+]
+```
