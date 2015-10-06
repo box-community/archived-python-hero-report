@@ -20,18 +20,27 @@ This web app provides dynamic reporting for Box enterprises. (These instructions
 
 ### Create Docker Container
 
-1. Install [docker-compose](http://docs.docker.com/compose/install/) and [docker-machine](https://docs.docker.com/machine/#installation).
-1. Clone this repository
-1. Edit the `/.env` file. Set the following values:
+* Install [docker-compose](http://docs.docker.com/compose/install/) and [docker-machine](https://docs.docker.com/machine/#installation).
+* Clone this repository
+* Edit the `/.env` file. Set the following values:
    * `CLIENT_ID` = your Box app Client ID
    * `CLIENT_SECRET` = your Box app Client Secret
    * `ACCESS_TOKEN` = your initial access token
    * `REFRESH_TOKEN` = your initial refresh token
-1. Open a terminal shell
-1. Create the virtual machine to host your Docker container
-  * `$ docker-machine create -d virtualbox dev;`
-1. Make the `dev` VM your default
-  * `$ eval "$(docker-machine env dev)"`
+* Open a terminal shell
+* Create the virtual machine to host your Docker container
+```
+$ docker-machine create -d virtualbox dev
+Creating VirtualBox VM...
+Creating SSH key...
+Starting VirtualBox VM...
+Starting VM...
+To see how to connect Docker to this machine, run: docker-machine env test
+```
+* Make the `dev` VM your default
+```
+$ eval "$(docker-machine env dev)"
+```
 1. Change to the directory when you cloned this repo
   * `$ cd ~/Documents/github/box-hero-report`
 1. Build the Docker container. This may take a bit.
