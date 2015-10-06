@@ -34,7 +34,11 @@ class Box(object):
 			store_tokens=self.store_tokens)
 
 	def client(self):
-		return Client(self.oauth2())
+		try:
+			return Client(self.oauth2())
+		except Exception as e:
+			self.logger.warn('Client could not be created because credentails are not present.')
+			return None
 
 	def import_tokens(self):
 		self.set_value('client_id', os.environ['CLIENT_ID'])

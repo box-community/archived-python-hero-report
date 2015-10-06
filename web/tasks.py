@@ -23,8 +23,7 @@ class BackgroundTasks(object):
 		self.scheduler = BackgroundScheduler()
 		
 			
-	def get_velocity_events(self, event_types, created_after, created_before):
-		client = Box(self.logger).client()
+	def get_velocity_events(self, client, event_types, created_after, created_before):
 		total = 0
 		next_stream_position = 0
 		keep_going = True
@@ -48,7 +47,12 @@ class BackgroundTasks(object):
 	def record_velocity(self):
 		created_before = datetime.datetime.now(datetime.timezone.utc).replace(second=0, microsecond=0)
 		created_after = created_before + datetime.timedelta(minutes=-1)
-		events = self.get_velocity_events(BackgroundTasks.velocity_event_types, created_after, created_before)
+		client = Box(self.logger).client()
+		if client is None:
+			self.logger.warn("Client was not created. Events will not be fetched.")
+			return
+			
+		events = self.get_velocity_events(client, BackgroundTasks.velocity_event_types, created_after, created_before)
 
 		for event_type in BackgroundTasks.velocity_event_types:
 			count = len([elem for elem in events if elem['event_type'] == event_type])
