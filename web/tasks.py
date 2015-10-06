@@ -60,7 +60,4 @@ class BackgroundTasks(object):
 	def schedule(self):
 		self.logger.info("Starting scheduler")
 		self.scheduler.start()
-		self.scheduler.add_job(self.record_velocity, 'interval', minutes=1)
-		self.record_velocity()
-		
-		
+		self.scheduler.add_job(self.record_velocity, 'interval', minutes=1)		

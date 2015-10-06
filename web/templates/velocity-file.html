@@ -1,45 +1,25 @@
-{% extends "_base.html" %}
+{% extends "_base.iframe.html" %}
 
 {% block content %}
-<!--
-<table style="width:100%">
-    <tr>
-        <td style="min-width:600px;min-height:500px;"><iframe style="width:100%; height:100%" src="velocity/file" ></iframe></td>
-        <td style="min-width:600px;min-height:500px;"><iframe style="width:100%; height:100%" src="velocity/engagement" ></iframe></td>
-    <tr>    
-</table>
--->
 
-<row>
-<div class="col-md-6">
-    <iframe style="width:100%; height:100%; min-height:500px" src="velocity/file" ></iframe>
-</div>
-<div class="col-md-6">
-    <iframe style="width:100%; height:100%; min-height:500px" src="velocity/engagement" ></iframe>
-</div>
-</row>
-
-<!--
-<div id="velocity" style="height: 500px; min-width: 800px"></div>
-<div id="container_6H" style="height: 500px; min-width: 800px"></div>
--->
+<div id="chart"></div>
 
 {% endblock %}
 
 {% block js %}
-<!--
 <script language="javascript">
 $(function () {
-    events = ['UPLOAD', 'DOWNLOAD', 'DELETE', 'COLLABORATION_INVITE','COLLABORATION_ACCEPT'],
-    //events = ['UPLOAD', 'DOWNLOAD'],
-    display_name = ['Uploads', 'Downloads', 'Deletes', 'Collaboration Invites', 'Collaboration Accepts']
+    //events = ['UPLOAD', 'DOWNLOAD', 'DELETE', 'COLLABORATION_INVITE','COLLABORATION_ACCEPT'],
+    events = ['UPLOAD', 'DOWNLOAD', 'DELETE'],
+    display_name = ['Uploads', 'Downloads', 'Deletes']
     chartsCreated = false;
      
     setSeries = function() {
-        $.getJSON('velocity?event_type=' + events.join(), function (data) {
+        $.getJSON('stat?event_type=' + events.join(), function (data) {
             if (chartsCreated == false){
+                chartsCreated = true;
                 createCharts(data);
-                setInterval(setSeries, 5 * 1000);
+                setInterval(setSeries, 60 * 1000);
             }
             else{
                 updateCharts(data);
@@ -58,38 +38,62 @@ $(function () {
             });
         }
         
-        createLongRangeChart(series);
-        createShortRangeChart(series);
-        chartsCreated = true;
+        createChart(series);
+        //createShortRangeChart(series);
     }
     
     function updateCharts(data){
         console.log('updating charts')
+        var chart = $("#chart").highcharts(); 
         for (i=0; i < data.length; i++){
-//            $("#container_30M").highcharts().series[i].setData(data[i], false);
-//            $("#container_6H").highcharts().series[i].setData(data[i], false);
-//            var newDataPoint = data[i][data[i].length-1];
-           var newDataPoint = [new Date().getTime(), 100];
-           addDataPoint(newDataPoint, "#container_30M");
-//           addDataPoint(newDataPoint, "#container_6H");
+            chart.series[i].setData(data[i], false);
         }
-//        $('#container_30M').highcharts().redraw();
-//        $('#container_6H').highcharts().redraw();
     }
 
     function addDataPoint(dataPoint, chartId){
-//        if (series.data[series.data.length-1].x != dataPoint[0])
-//        {
-            $("#container_30M").highcharts().series[i].addPoint(dataPoint, true, true);
-            $("#container_6H").highcharts().series[i].addPoint(dataPoint, true, true);
-//        }
+        var series = $("#chart").highcharts().series[i]
+        if (series.data[series.data.length-1].x != dataPoint[0])
+        {
+            series.addPoint(dataPoint, true, true);
+        }
     }
     
     // create the chart when all data is loaded
-    function createLongRangeChart(series) {
-        $('#container_30M').highcharts('StockChart', {
+    function createChart(series) {
+        $('#chart').highcharts('StockChart', {
+            title : {
+                text : "File Activity"
+            },
             rangeSelector: {
-                selected: 4
+                buttons: [{
+                        count: 1,
+                        type: 'd',
+                        text: '1d'
+                    },{
+                        type: 'month',
+                        count: 1,
+                        text: '1m'
+                    }, {
+                        type: 'month',
+                        count: 3,
+                        text: '3m'
+                    }, {
+                        type: 'month',
+                        count: 6,
+                        text: '6m'
+                    }, {
+                        type: 'ytd',
+                        text: 'YTD'
+                    }, {
+                        type: 'year',
+                        count: 1,
+                        text: '1y'
+                    }, {
+                        type: 'all',
+                        text: 'All'
+                    }],
+                inputEnabled: true,
+                selected: 0
             },
             tooltip: {
                 pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b><br/>',
@@ -136,5 +140,4 @@ $(function () {
     
 });
 </script>
--->
 {% endblock %}

@@ -3,7 +3,7 @@
 
 import datetime
 from app import db
-
+from sqlalchemy import UniqueConstraint
 
 class Setting(db.Model):
 	
@@ -21,6 +21,7 @@ class Setting(db.Model):
 class Stat(db.Model):
 	
 	__tablename__ = 'stats'
+	__table_args__ = (UniqueConstraint('measure', 'starting'),)
 
 	id = db.Column(db.Integer, primary_key=True)
 	measure = db.Column(db.String, nullable=False)
