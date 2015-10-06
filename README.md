@@ -79,7 +79,7 @@ An API is exposed so that external applications can pull reporting data.
 
 ### Events
 
-* Endpoint: http://*host*/event/stat?event_type=*event_types,event_type*
+* Endpoint: http://*host*/event/stat?event_type=*event_type[,event_type]*
 * Supported *event_type*: 
   * UPLOAD
   * DOWNLOAD
