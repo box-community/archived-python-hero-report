@@ -5,10 +5,12 @@ import fcntl
 import logging
 import datetime
 from app import db 
+from box import Box
 from boxsdk import OAuth2
 from boxsdk import Client 
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.sql import exists
+from sqlalchemy.exc import SQLAlchemyError
 from models import Stat
 
 class BackgroundTasks(object):
@@ -16,22 +18,19 @@ class BackgroundTasks(object):
 	velocity_event_types=['UPLOAD','DOWNLOAD','DELETE','COLLABORATION_INVITE','COLLABORATION_ACCEPT']
 	limit = 500
 	
-	def __init__(self, db, logger, access_token, refresh_token):
+	def __init__(self, logger):
 		self.logger = logger
 		self.scheduler = BackgroundScheduler()
-		self.client = Client(OAuth2(
-			client_id='foo',
-			client_secret='bar',
-			access_token=access_token,
-			refresh_token=refresh_token))
+		
 			
 	def get_velocity_events(self, event_types, created_after, created_before):
+		client = Box(self.logger).client()
 		total = 0
 		next_stream_position = 0
 		keep_going = True
 		result = []
 		while keep_going:
-			events = self.client.events().get_enterprise_events(
+			events = client.events().get_enterprise_events(
 				limit=BackgroundTasks.limit,
 				event_type=event_types,
 				stream_position=next_stream_position,
@@ -55,8 +54,12 @@ class BackgroundTasks(object):
 			count = len([elem for elem in events if elem['event_type'] == event_type])
 			stat = Stat(event_type, count, created_after, created_before)
 			db.session.add(stat)
-		db.session.commit()
-	
+			try:
+				db.session.commit()
+			except Exception as e:
+				self.logger.debug('Caught exception: {}'.format(e))
+				db.session.rollback()
+		
 	def schedule(self):
 		self.logger.info("Starting scheduler")
 		self.scheduler.start()

@@ -1,140 +1,37 @@
 {% extends "_base.html" %}
 
 {% block content %}
-<!--
-<table style="width:100%">
-    <tr>
-        <td style="min-width:600px;min-height:500px;"><iframe style="width:100%; height:100%" src="velocity/file" ></iframe></td>
-        <td style="min-width:600px;min-height:500px;"><iframe style="width:100%; height:100%" src="velocity/engagement" ></iframe></td>
-    <tr>    
-</table>
--->
 
 <row>
-<div class="col-md-6">
-    <iframe style="width:100%; height:100%; min-height:500px" src="velocity/file" ></iframe>
-</div>
-<div class="col-md-6">
-    <iframe style="width:100%; height:100%; min-height:500px" src="velocity/engagement" ></iframe>
-</div>
+    <div class="col-md-12">
+        <div style="float:right; margin-bottom:20px;">
+            <a id="auth" class="btn" href="auth/authorize" role="button">...</a>
+            <a class="btn btn-default" href="auth/import" role="button">Import Tokens</a>
+        </div>
+    </div>
 </row>
 
-<!--
-<div id="velocity" style="height: 500px; min-width: 800px"></div>
-<div id="container_6H" style="height: 500px; min-width: 800px"></div>
--->
+<row style="margin-top:20px">
+    <div class="col-md-6">
+        <iframe style="width:100%; height:100%; min-height:500px" src="velocity/file" ></iframe>
+    </div>
+    <div class="col-md-6">
+        <iframe style="width:100%; height:100%; min-height:500px" src="velocity/engagement" ></iframe>
+    </div>
+</row>
 
 {% endblock %}
 
 {% block js %}
-<!--
 <script language="javascript">
-$(function () {
-    events = ['UPLOAD', 'DOWNLOAD', 'DELETE', 'COLLABORATION_INVITE','COLLABORATION_ACCEPT'],
-    //events = ['UPLOAD', 'DOWNLOAD'],
-    display_name = ['Uploads', 'Downloads', 'Deletes', 'Collaboration Invites', 'Collaboration Accepts']
-    chartsCreated = false;
-     
-    setSeries = function() {
-        $.getJSON('velocity?event_type=' + events.join(), function (data) {
-            if (chartsCreated == false){
-                createCharts(data);
-                setInterval(setSeries, 5 * 1000);
-            }
-            else{
-                updateCharts(data);
-            }
-        });
-    };
-    
-    function createCharts(data){
-        console.log('creating charts')
-
-        var series = [];
-        for (i=0; i < data.length; i++){
-            series.push({
-                name: display_name[i],
-                data: data[i]
-            });
-        }
-        
-        createLongRangeChart(series);
-        createShortRangeChart(series);
-        chartsCreated = true;
-    }
-    
-    function updateCharts(data){
-        console.log('updating charts')
-        for (i=0; i < data.length; i++){
-//            $("#container_30M").highcharts().series[i].setData(data[i], false);
-//            $("#container_6H").highcharts().series[i].setData(data[i], false);
-//            var newDataPoint = data[i][data[i].length-1];
-           var newDataPoint = [new Date().getTime(), 100];
-           addDataPoint(newDataPoint, "#container_30M");
-//           addDataPoint(newDataPoint, "#container_6H");
-        }
-//        $('#container_30M').highcharts().redraw();
-//        $('#container_6H').highcharts().redraw();
-    }
-
-    function addDataPoint(dataPoint, chartId){
-//        if (series.data[series.data.length-1].x != dataPoint[0])
-//        {
-            $("#container_30M").highcharts().series[i].addPoint(dataPoint, true, true);
-            $("#container_6H").highcharts().series[i].addPoint(dataPoint, true, true);
-//        }
-    }
-    
-    // create the chart when all data is loaded
-    function createLongRangeChart(series) {
-        $('#container_30M').highcharts('StockChart', {
-            rangeSelector: {
-                selected: 4
-            },
-            tooltip: {
-                pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b><br/>',
-                valueDecimals: 0
-            },
-            legend: {
-                enabled: true,
-                layout: 'vertical',
-                align: 'right',
-                verticalAlign: 'middle',
-                borderWidth: 0
-            },
-            series: series
-        });
-    };
-
-    function createShortRangeChart(series) {
-        $('#container_6H').highcharts('StockChart', {           
-            rangeSelector: {
-                buttons: [{
-                    count: 10,
-                    type: 'minute',
-                    text: '10m'
-                }],
-                inputEnabled: false,
-                selected: 0
-            },
-            tooltip: {
-                pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b><br/>',
-                valueDecimals: 0
-            },
-            legend: {
-                enabled: true,
-                layout: 'vertical',
-                align: 'right',
-                verticalAlign: 'middle',
-                borderWidth: 0
-            },
-            series: series
-        });
-    };
-
-    setSeries();
-    
+$(function(){
+    $.getJSON('auth/is_authorized', function (is_authorized) {
+        var btn_class = is_authorized ? 'btn-success' : 'btn-warning';
+        var btn_text = is_authorized ? 'Authorized' : 'Authorize';
+        $("#auth").addClass(btn_class);
+        $("#auth").html(btn_text);
+    });
 });
 </script>
--->
+
 {% endblock %}
