@@ -38,12 +38,12 @@ def is_authorized():
 def authorize():
 	box = Box(app.logger)
 	code = request.args.get('code')
-	
+
 	if code is None:
 		callback = 'https://' + request.headers.get('Host') + '/auth/authorize'
 		auth_url = box.authorization_url(callback)
 		return redirect(auth_url, code=302)
-		
+
 	box.authorize(code)
 	return redirect('/', code=302)
 
@@ -55,6 +55,10 @@ def velocity_file():
 def velocity_engagement():
 	return render_template('event-engagement.html')
 
+@app.route('/event/uniqueusers', methods=['GET'])
+def velocity_uniqueusers():
+	return render_template('unique-users.html')
+
 @app.route('/event/stat', methods=['GET'])
 def velocity():
 	result = []
@@ -62,7 +66,7 @@ def velocity():
 
 	event_types = request.args.get('event_type').split(',')
 	for event_type in event_types:
-		series = [] 
+		series = []
 		stats = Stat.query.filter(Stat.measure == event_type).order_by(Stat.starting.asc()).all()
 		for stat in stats:
 			series.append([(stat.starting - epoch).total_seconds() * 1000, stat.value])
