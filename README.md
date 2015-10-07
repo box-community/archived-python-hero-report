@@ -8,7 +8,7 @@ This web app provides dynamic reporting for Box enterprises. (These instructions
 * Automatically pull event information once a minute, and usage information once a day
 * Provide an API to expose reporting information to other services
 * Use Docker to simplify boostrapping and deployment
- 
+
 ## Dev Deployment
 
 *Note*: This application requires Docker, which works best on Mac or Linux.
@@ -16,7 +16,7 @@ This web app provides dynamic reporting for Box enterprises. (These instructions
 ### Gather Box Credentials
 
 1. Create a Box app with the 'manage an enterprise' scope.
-2. Use a [token generator application](https://box-oauth2-mvc.azurewebsites.net) to fetch an initial access/refresh token pair. The authorizing account **must** be a Box enterprise admin or co-admin.
+2. Use a [token generator application](https://box-oauth2-mvc.azurewebsites.net) to fetch an initial access/refresh token pair. The authorizing account **must** be a Box enterprise admin or co-admin and the Box app **must** have the "Manage an enterprise" scope enabled.
 
 ### Create Docker Container
 
@@ -44,7 +44,7 @@ $ eval "$(docker-machine env dev)"
 * Change to the directory when you cloned this repo
 ```
 $ cd ~/Documents/github/box-hero-report
-box-hero-report$ 
+box-hero-report$
 ```
 * Build the Docker container. This may take a bit.
 ```
@@ -53,7 +53,7 @@ $ box-hero-report$ docker-compose build
 $ box-hero-report$ docker-compose up -d
 ..... lots of stuff happens .....
 ```
-### Run The Application 
+### Run The Application
 
 * Create the database
 ```
@@ -63,8 +63,8 @@ box-hero-report$ docker-compose run web /usr/local/bin/python create_db.py
 ```
 box-hero-report$ docker-machine ls
 NAME      ACTIVE   DRIVER       STATE     URL                         SWARM
-default            virtualbox   Stopped                               
-dev       *        virtualbox   Running   tcp://192.168.99.100:2376   
+default            virtualbox   Stopped
+dev       *        virtualbox   Running   tcp://192.168.99.100:2376
 ```
 * Click the `Import Tokens` button at the top right of the screen to save your tokens to the database.
 * The screen should refresh and the app should begin pulling data from Box and storing them in the database. The graphs will dynamically update with new data once per minute. The app will continue to pull data until the container is shut down.
@@ -80,11 +80,11 @@ An API is exposed so that external applications can pull reporting data.
 ### Events
 
 * Endpoint: http://*host*/event/stat?event_type=*event_type[,event_type]*
-* Supported *event_type*: 
+* Supported *event_type*:
   * UPLOAD
   * DOWNLOAD
   * DELETE
-  * LOGIN 
+  * LOGIN
   * COLLABORATION_INVITE
   * COLLABORATION_ACCEPT
 * Result: An array of array of event datapoints, where a datapoint is a `tick` (ms from epoch) and a `count`
@@ -94,15 +94,15 @@ An API is exposed so that external applications can pull reporting data.
 GET http://host/event/stat?event_type=UPLOAD,DOWNLOAD
 
 [
-  [ 
+  [
     /* UPLOAD events        */
     /* tick,          count */
-    [1444156320000.0, 110.0], 
+    [1444156320000.0, 110.0],
     [1444156380000.0, 121.0]
   ],
-  [ 
+  [
     /* DOWNLOAD events      */
-    [1444156320000.0, 195.0], 
+    [1444156320000.0, 195.0],
     [1444156380000.0, 201.0]
   ]
 ]
