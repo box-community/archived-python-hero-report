@@ -19,11 +19,20 @@ from models import *
 def index():
 	return render_template('index.html')
 
+@app.route('/settings', methods=['GET', 'POST'])
+def settings():
+	if request.method == 'POST':
+		app.logger.debug("Received post '{0}', '{1}'".format(request.form['client_id'], request.form['client_secret']))
+		box = Box(app.logger)
+		box.set_value('client_id', request.form['client_id'])
+		box.set_value('client_secret', request.form['client_secret'])
+		return redirect('/', code=302)
+	return render_template('settings.html')
+
 @app.route('/auth/is_authorized', methods=['GET'])
 def is_authorized():
-	box = Box(app.logger)
-	authed = box.is_authorized()
-	return Response(json.dumps(authed), mimetype='application/json')
+	authorized = Box(app.logger).is_authorized()
+	return Response(json.dumps(authorized), mimetype='application/json')
 
 @app.route('/auth/authorize', methods=['GET','POST'])
 def authorize():
@@ -31,18 +40,11 @@ def authorize():
 	code = request.args.get('code')
 	
 	if code is None:
-		auth_url = box.authorization_url()
-		app.logger.debug('redirecting to ' + auth_url)
+		callback = 'https://' + request.headers.get('Host') + '/auth/authorize'
+		auth_url = box.authorization_url(callback)
 		return redirect(auth_url, code=302)
 		
-	app.logger.debug('received auth code')
 	box.authorize(code)
-	return redirect('/', code=302)
-
-@app.route('/auth/import', methods=['GET'])
-def import_tokens():
-	box = Box(app.logger)
-	box.import_tokens();
 	return redirect('/', code=302)
 
 @app.route('/event/file', methods=['GET'])

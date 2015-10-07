@@ -5,8 +5,6 @@ import os
 
 
 class BaseConfig(object):
-    ACCESS_TOKEN = os.environ['ACCESS_TOKEN']
-    REFRESH_TOKEN = os.environ['REFRESH_TOKEN']
     DEBUG = os.environ['DEBUG']
     DB_NAME = os.environ['DB_NAME']
     DB_USER = os.environ['DB_USER']

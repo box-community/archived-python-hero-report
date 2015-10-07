@@ -22,6 +22,7 @@ class Box(object):
 		if setting is None:
 			setting = Setting(key,'')
 			db.session.add(setting)
+		# self.logger.debug('setting {0} to {1}'.format(key, value))
 		setting.value = value
 		db.session.commit()
 
@@ -39,12 +40,6 @@ class Box(object):
 		except:
 			self.logger.warn('Client could not be created because credentails are not present.')
 			return None
-
-	def import_tokens(self):
-		self.set_value('client_id', os.environ['CLIENT_ID'])
-		self.set_value('client_secret', os.environ['CLIENT_SECRET'])
-		self.set_value('access_token', os.environ['ACCESS_TOKEN'])
-		self.set_value('refresh_token', os.environ['REFRESH_TOKEN'])
 
 	def store_tokens(self, access_token, refresh_token):
 		self.logger.info('Updating access/refresh token pair')
@@ -65,12 +60,10 @@ class Box(object):
 			self.logger.debug('User is not authorized')
 			return False
 	
-	def authorization_url(self):
-		auth_url, csrf_token = self.oauth2().get_authorization_url('http://192.168.99.100/')
+	def authorization_url(self, host):
+		auth_url, csrf_token = self.oauth2().get_authorization_url(host)
 		return auth_url
 	
 	def authorize(self, code):
 		self.logger.info('Authorizing OAuth2 code...')
 		access_token, refresh_token = self.oauth2().authenticate(code)
-		self.logger.info('OAuth2 code authorized')
-		self.store_tokens(access_token, refresh_token)	
