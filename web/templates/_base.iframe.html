@@ -17,6 +17,7 @@
       var chart = (function (){
           // Add object properties like this
           var _id;
+          var _height;
           var _title;
           var _url;
           var _event_types;
@@ -35,6 +36,9 @@
               }
           
               $(_id).highcharts('StockChart', {
+                  chart: {
+                    height: _height
+                  },
                   title : {
                       text : _title
                   },
@@ -64,21 +68,21 @@
                       verticalAlign: 'middle',
                       borderWidth: 0
                   },
+                  navigator: {
+                      enabled: false,
+                  },
                   series: series
               });
           }
       
           function updateChart(data){
-              var chart = $(id).highcharts();
+              var chart = $(_id).highcharts();
               for (var i=0; i < data.length; i++){
                   chart.series[i].setData(data[i], true);
               }
           }
       
           function setSeries(){
-              console.log(_url);
-              console.log(_event_types.join());
-            
               $.getJSON(_url + _event_types.join(), function (data) {
                       if (_chartsCreated == false){
                           _chartsCreated = true;
@@ -92,8 +96,9 @@
           }
           
           return {
-              create: function(id, title, url, event_types, event_labels){
+              create: function(id, height, title, url, event_types, event_labels){
                   _id = id;
+                  _height = height;
                   _title = title;
                   _url = url;
                   _event_types = event_types;
