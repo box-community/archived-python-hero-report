@@ -17,11 +17,6 @@ This web app provides dynamic reporting for Box enterprises. (These instructions
 
 * Install [docker-compose](http://docs.docker.com/compose/install/) and [docker-machine](https://docs.docker.com/machine/#installation).
 * Clone this repository
-* Edit the `/.env` file. Set the following values:
-   * `CLIENT_ID` = your Box app Client ID
-   * `CLIENT_SECRET` = your Box app Client Secret
-   * `ACCESS_TOKEN` = your initial access token
-   * `REFRESH_TOKEN` = your initial refresh token
 * Open a terminal shell
 * Create the virtual machine to host your Docker container
 ```
