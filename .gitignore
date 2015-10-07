@@ -59,3 +59,7 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# SSL key/cert
+nginx/ssl-cert.key
+nginx/ssl-cert.pem

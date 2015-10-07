@@ -4,38 +4,38 @@ import os
 import fcntl
 import logging
 import datetime
-from app import db 
+from app import db
 from box import Box
 from boxsdk import OAuth2
-from boxsdk import Client 
+from boxsdk import Client
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.sql import exists
 from sqlalchemy.exc import SQLAlchemyError
 from models import Stat
 
 class BackgroundTasks(object):
-	
+
 	velocity_event_types=['UPLOAD','DOWNLOAD','DELETE','COLLABORATION_INVITE','COLLABORATION_ACCEPT','LOGIN']
 	limit = 500
-	
+
 	def __init__(self, logger):
 		self.logger = logger
 		self.scheduler = BackgroundScheduler()
-		
-			
+
+
 	def get_velocity_events(self, client, event_types, created_after, created_before):
 		total = 0
 		next_stream_position = 0
 		keep_going = True
 		result = []
-		
+
 		try:
 			while keep_going:
 				events = client.events().get_enterprise_events(
 					limit=BackgroundTasks.limit,
 					event_type=event_types,
 					stream_position=next_stream_position,
-					created_after=created_after,		
+					created_after=created_after,
 					created_before=created_before,
 				)
 				result.extend(events['entries'])
@@ -48,7 +48,7 @@ class BackgroundTasks(object):
 		except Exception as e:
 			self.logger.warn("Failed to fetch event data from Box: {0}".format(e))
 			return []
-		
+
 	def record_velocity(self):
 		created_before = datetime.datetime.now(datetime.timezone.utc).replace(second=0, microsecond=0)
 		created_after = created_before + datetime.timedelta(minutes=-1)
@@ -56,7 +56,7 @@ class BackgroundTasks(object):
 		if client is None:
 			self.logger.warn("Client was not created. Events will not be fetched.")
 			return
-			
+
 		events = self.get_velocity_events(client, BackgroundTasks.velocity_event_types, created_after, created_before)
 
 		for event_type in BackgroundTasks.velocity_event_types:
@@ -68,7 +68,19 @@ class BackgroundTasks(object):
 			except Exception as e:
 				self.logger.debug('Caught exception: {}'.format(e))
 				db.session.rollback()
-		
+
+		unique_user_count = len(set([elem['created_by']['login'] for elem in events]))
+		stat = Stat('UNIQUE_USERS', unique_user_count, created_after, created_before)
+		db.session.add(stat)
+		try:
+			db.session.commit()
+		except:
+			self.logger.debug('Caught exception: {}'.format(e))
+			db.session.rollback()
+		else:
+			self.logger.info("inserted %s unqiue users" % unique_user_count)
+
+
 	def schedule(self):
 		self.logger.info("Starting scheduler")
 		self.scheduler.start()
