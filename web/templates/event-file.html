@@ -7,131 +7,14 @@
 {% endblock %}
 
 {% block js %}
-<script language="javascript">
+<script type="text/javascript">
 $(function () {
-    //events = ['UPLOAD', 'DOWNLOAD', 'DELETE', 'COLLABORATION_INVITE','COLLABORATION_ACCEPT'],
-    events = ['UPLOAD', 'DOWNLOAD', 'DELETE'],
-    display_name = ['Uploads', 'Downloads', 'Deletes']
-    chartsCreated = false;
-
-    setSeries = function() {
-        $.getJSON('stat?event_type=' + events.join(), function (data) {
-            if (chartsCreated == false){
-                chartsCreated = true;
-                createCharts(data);
-                setInterval(setSeries, 60 * 1000);
-            }
-            else{
-                updateCharts(data);
-            }
-        });
-    };
-
-    function createCharts(data){
-        console.log('creating charts')
-
-        var series = [];
-        for (i=0; i < data.length; i++){
-            series.push({
-                name: display_name[i],
-                data: data[i]
-            });
-        }
-
-        createChart(series);
-        //createShortRangeChart(series);
-    }
-
-    function updateCharts(data){
-        var chart = $("#chart").highcharts();
-        for (i=0; i < data.length; i++){
-            chart.series[i].setData(data[i], true);
-        }
-    }
-
-    // create the chart when all data is loaded
-    function createChart(series) {
-        $('#chart').highcharts('StockChart', {
-            title : {
-                text : "File Events"
-            },
-            exporting:{
-                url:'https://export.highcharts.com'
-            },
-            rangeSelector: {
-                buttons: [{
-                        count: 1,
-                        type: 'd',
-                        text: '1d'
-                    },{
-                        type: 'month',
-                        count: 1,
-                        text: '1m'
-                    }, {
-                        type: 'month',
-                        count: 3,
-                        text: '3m'
-                    }, {
-                        type: 'month',
-                        count: 6,
-                        text: '6m'
-                    }, {
-                        type: 'ytd',
-                        text: 'YTD'
-                    }, {
-                        type: 'year',
-                        count: 1,
-                        text: '1y'
-                    }, {
-                        type: 'all',
-                        text: 'All'
-                    }],
-                inputEnabled: true,
-                selected: 0
-            },
-            tooltip: {
-                pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b><br/>',
-                valueDecimals: 0
-            },
-            legend: {
-                enabled: true,
-                layout: 'vertical',
-                align: 'right',
-                verticalAlign: 'middle',
-                borderWidth: 0
-            },
-            series: series
-        });
-    };
-
-    function createShortRangeChart(series) {
-        $('#container_6H').highcharts('StockChart', {
-            rangeSelector: {
-                buttons: [{
-                    count: 10,
-                    type: 'minute',
-                    text: '10m'
-                }],
-                inputEnabled: false,
-                selected: 0
-            },
-            tooltip: {
-                pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b><br/>',
-                valueDecimals: 0
-            },
-            legend: {
-                enabled: true,
-                layout: 'vertical',
-                align: 'right',
-                verticalAlign: 'middle',
-                borderWidth: 0
-            },
-            series: series
-        });
-    };
-
-    setSeries();
-
+    chart.create( '#chart',
+                  300,
+                  'Content Events',
+                  'stat?event_type=',
+                  ['UPLOAD', 'DOWNLOAD', 'DELETE'],
+                  ['Uploads', 'Downloads', 'Deletes']);
 });
 </script>
 {% endblock %}

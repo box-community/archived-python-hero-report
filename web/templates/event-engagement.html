@@ -7,103 +7,14 @@
 {% endblock %}
 
 {% block js %}
-<script language="javascript">
+<script type="text/javascript">
 $(function () {
-    events = ['LOGIN','COLLABORATION_INVITE','COLLABORATION_ACCEPT'],
-    display_name = ['Logins','Collab Invites', 'Collab Accepts']
-    chartsCreated = false;
-
-    setSeries = function() {
-        $.getJSON('stat?event_type=' + events.join(), function (data) {
-            if (chartsCreated == false){
-                chartsCreated = true;
-                createCharts(data);
-                setInterval(setSeries, 60 * 1000);
-            }
-            else{
-                updateCharts(data);
-            }
-        });
-    };
-
-    function createCharts(data){
-        console.log('creating charts')
-
-        var series = [];
-        for (i=0; i < data.length; i++){
-            series.push({
-                name: display_name[i],
-                data: data[i]
-            });
-        }
-
-        createChart(series);
-    }
-
-    function updateCharts(data){
-        var chart = $("#chart").highcharts();
-        for (i=0; i < data.length; i++){
-            chart.series[i].setData(data[i], true);
-        }
-    }
-
-    // create the chart when all data is loaded
-    function createChart(series) {
-        $('#chart').highcharts('StockChart', {
-            title : {
-                text : "Engagement Events"
-            },
-            exporting:{
-                url:'https://export.highcharts.com'
-            },
-            rangeSelector: {
-                buttons: [{
-                        count: 1,
-                        type: 'day',
-                        text: '1d'
-                    },{
-                        type: 'month',
-                        count: 1,
-                        text: '1m'
-                    }, {
-                        type: 'month',
-                        count: 3,
-                        text: '3m'
-                    }, {
-                        type: 'month',
-                        count: 6,
-                        text: '6m'
-                    }, {
-                        type: 'ytd',
-                        text: 'YTD'
-                    }, {
-                        type: 'year',
-                        count: 1,
-                        text: '1y'
-                    }, {
-                        type: 'all',
-                        text: 'All'
-                    }],
-                inputEnabled: true,
-                selected: 0
-            },
-            tooltip: {
-                pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b><br/>',
-                valueDecimals: 0
-            },
-            legend: {
-                enabled: true,
-                layout: 'vertical',
-                align: 'right',
-                verticalAlign: 'middle',
-                borderWidth: 0
-            },
-            series: series
-        });
-    };
-
-    setSeries();
-
+    chart.create( '#chart',
+                  300,
+                  'Engagement Events',
+                  'stat?event_type=',
+                  ['LOGIN','COLLABORATION_INVITE','COLLABORATION_ACCEPT'],
+                  ['Logins','Collab Invites', 'Collab Accepts']);
 });
 </script>
 {% endblock %}

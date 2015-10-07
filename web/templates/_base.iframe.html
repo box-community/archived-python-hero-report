@@ -12,6 +12,99 @@
     <script src="//code.jquery.com/jquery-1.11.2.min.js" type="text/javascript"></script>
     <script src="//code.highcharts.com/stock/highstock.js"></script>
     <script src="//code.highcharts.com/stock/modules/exporting.js"></script>
+    <script type="text/javascript">
+    // constructor    
+      var chart = (function (){
+          // Add object properties like this
+          var _id;
+          var _height;
+          var _title;
+          var _url;
+          var _event_types;
+          var _event_labels;
+          var _chartsCreated = false;
+      
+          function createChart(data){
+              console.log('creating charts')
+          
+              var series = [];
+              for (var i=0; i < data.length; i++){
+                  series.push({
+                      name: _event_labels[i],
+                      data: data[i]
+                  });
+              }
+          
+              $(_id).highcharts('StockChart', {
+                  chart: {
+                    height: _height
+                  },
+                  title : {
+                      text : _title
+                  },
+                  exporting:{
+                      url:'https://export.highcharts.com'
+                  },
+                  rangeSelector: {
+                      buttons: [
+                          {count: 1, type: 'day', text: '1D'},
+                          {count: 1, type: 'month', text: '1M'},
+                          {count: 6, type: 'month', text: '6M'},
+                          {          type: 'ytd', text: 'YTD'},
+                          {count: 1, type: 'year', text: '1Y'},
+                          {          type: 'all', text: 'ALL'}
+                      ],
+                      inputEnabled: true,
+                      selected: 0
+                  },
+                  tooltip: {
+                      pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b><br/>',
+                      valueDecimals: 0
+                  },
+                  legend: {
+                      enabled: true,
+                      layout: 'vertical',
+                      align: 'right',
+                      verticalAlign: 'middle',
+                      borderWidth: 0
+                  },
+                  series: series
+              });
+          }
+      
+          function updateChart(data){
+              var chart = $(_id).highcharts();
+              for (var i=0; i < data.length; i++){
+                  chart.series[i].setData(data[i], true);
+              }
+          }
+      
+          function setSeries(){
+              $.getJSON(_url + _event_types.join(), function (data) {
+                      if (_chartsCreated == false){
+                          _chartsCreated = true;
+                          createChart(data);
+                          setInterval(setSeries, 60 * 1000);
+                      }
+                      else{
+                          updateChart(data);
+                      }
+                  });
+          }
+          
+          return {
+              create: function(id, height, title, url, event_types, event_labels){
+                  _id = id;
+                  _height = height;
+                  _title = title;
+                  _url = url;
+                  _event_types = event_types;
+                  _event_labels = event_labels;
+                  setSeries();
+              },
+          }
+      }());
+    </script>    
     {% block js %}{% endblock %}
   </body>
 </html>
