@@ -47,11 +47,11 @@
                   },
                   rangeSelector: {
                       buttons: [
-                          {count: 1, type: 'day', text: '1d'},
-                          {count: 3, type: 'day', text: '1d'},
-                          {count: 5, type: 'day', text: '1d'},
+                          {count: 1, type: 'day', text: '1D'},
+                          {count: 1, type: 'month', text: '1M'},
+                          {count: 6, type: 'month', text: '6M'},
                           {          type: 'ytd', text: 'YTD'},
-                          {count: 1, type: 'year', text: '1y'},
+                          {count: 1, type: 'year', text: '1Y'},
                           {          type: 'all', text: 'ALL'}
                       ],
                       inputEnabled: true,
@@ -67,9 +67,6 @@
                       align: 'right',
                       verticalAlign: 'middle',
                       borderWidth: 0
-                  },
-                  navigator: {
-                      enabled: false,
                   },
                   series: series
               });
