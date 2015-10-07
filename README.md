@@ -47,13 +47,51 @@ $ eval "$(docker-machine env dev)"
 $ cd ~/Documents/github/box-hero-report
 box-hero-report$
 ```
-* Build the Docker container. This may take a bit.
+* Build the Docker container. This will take a while.
 ```
-$ box-hero-report$ docker-compose build
-..... lots of stuff happens .....
-$ box-hero-report$ docker-compose up -d
-..... lots of stuff happens .....
+box-hero-report$ docker-compose build
+box-hero-report$ docker-compose up -d
 ```
+
+### Configure SSL Certificates
+
+In order to authenticate with Box the web app must have SSL enabled.
+
+#### To generate a self-signed test certificate/key pair
+
+**Note**: This cert is self-signed and will not be trusted by browsers. You'll get a warning message when you try to connect to the site, which you can ignore. This is OK for testing but not for production! Your sysadmin will be very angry and you will have a bad day.
+
+```
+box-hero-report$ openssl genrsa -out nginx/ssl-cert.key 2048
+box-hero-report$ openssl req -new -x509 -key ssl-cert.key -out nginx/ssl-cert.pem -days 1095
+```
+
+#### To use a production certificate/key pair
+
+1. Copy your certificate/key pair to `box-hero-app/nginx`
+2. If your certificate/key pair has a different name than `ssl-cert.pem` and `ssl-cert.key`, then:
+ 
+* Modify `box-hero-app/nginx/Dockerfile` to reflect your certificate/key filenames
+```
+FROM tutum/nginx
+RUN rm /etc/nginx/sites-enabled/default
+COPY YOUR-CERT /etc/ssl/certs/YOUR-CERT
+COPY YOUR-KEY /etc/ssl/private/YOUR-KEY
+ADD sites-enabled/ /etc/nginx/sites-enabled
+```
+ * Modify `box-hero-app/nginx/sites-enabled/flask_project` to reflect your certificate/key filenames
+```
+<-- snip -->
+server {
+	listen 443;
+	
+	ssl on;
+	ssl_certificate /etc/ssl/certs/YOUR-CERT;
+	ssl_certificate_key /etc/ssl/private/YOUR-KEY;
+<-- snip -->
+}
+```
+
 ### Run The Application
 
 * Create the database
