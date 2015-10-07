@@ -63,14 +63,14 @@ In order to authenticate with Box the web app must have SSL enabled.
 
 ```
 box-hero-report$ openssl genrsa -out nginx/ssl-cert.key 2048
-box-hero-report$ openssl req -new -x509 -key ssl-cert.key -out nginx/ssl-cert.pem -days 1095
+box-hero-report$ openssl req -new -x509 -key nginx/ssl-cert.key -out nginx/ssl-cert.pem -days 1095
 ```
 
 #### To use a production certificate/key pair
 
 1. Copy your certificate/key pair to `box-hero-app/nginx`
 2. If your certificate/key pair has a different name than `ssl-cert.pem` and `ssl-cert.key`, then:
- 
+
 * Modify `box-hero-app/nginx/Dockerfile` to reflect your certificate/key filenames
 ```
 FROM tutum/nginx
@@ -84,7 +84,7 @@ ADD sites-enabled/ /etc/nginx/sites-enabled
 <-- snip -->
 server {
 	listen 443;
-	
+
 	ssl on;
 	ssl_certificate /etc/ssl/certs/YOUR-CERT;
 	ssl_certificate_key /etc/ssl/private/YOUR-KEY;
