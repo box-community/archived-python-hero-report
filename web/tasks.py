@@ -28,21 +28,26 @@ class BackgroundTasks(object):
 		next_stream_position = 0
 		keep_going = True
 		result = []
-		while keep_going:
-			events = client.events().get_enterprise_events(
-				limit=BackgroundTasks.limit,
-				event_type=event_types,
-				stream_position=next_stream_position,
-				created_after=created_after,		
-				created_before=created_before,
-			)
-			result.extend(events['entries'])
-			count = events['chunk_size']
-			total = total + count
-			next_stream_position = events['next_stream_position']
-			keep_going = count == BackgroundTasks.limit
+		
+		try:
+			while keep_going:
+				events = client.events().get_enterprise_events(
+					limit=BackgroundTasks.limit,
+					event_type=event_types,
+					stream_position=next_stream_position,
+					created_after=created_after,		
+					created_before=created_before,
+				)
+				result.extend(events['entries'])
+				count = events['chunk_size']
+				total = total + count
+				next_stream_position = events['next_stream_position']
+				keep_going = count == BackgroundTasks.limit
 
-		return result
+			return result
+		except Exception as e:
+			self.logger.warn("Failed to fetch event data from Box: {0}".format(e))
+			return []
 		
 	def record_velocity(self):
 		created_before = datetime.datetime.now(datetime.timezone.utc).replace(second=0, microsecond=0)
@@ -68,4 +73,3 @@ class BackgroundTasks(object):
 		self.logger.info("Starting scheduler")
 		self.scheduler.start()
 		self.scheduler.add_job(self.record_velocity, 'interval', minutes=1)
-		self.record_velocity()
