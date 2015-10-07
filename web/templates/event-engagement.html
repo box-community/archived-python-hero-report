@@ -12,7 +12,7 @@ $(function () {
     events = ['LOGIN','COLLABORATION_INVITE','COLLABORATION_ACCEPT'],
     display_name = ['Logins','Collab Invites', 'Collab Accepts']
     chartsCreated = false;
-     
+
     setSeries = function() {
         $.getJSON('stat?event_type=' + events.join(), function (data) {
             if (chartsCreated == false){
@@ -25,7 +25,7 @@ $(function () {
             }
         });
     };
-    
+
     function createCharts(data){
         console.log('creating charts')
 
@@ -36,22 +36,25 @@ $(function () {
                 data: data[i]
             });
         }
-        
+
         createChart(series);
     }
-    
+
     function updateCharts(data){
-        var chart = $("#chart").highcharts(); 
+        var chart = $("#chart").highcharts();
         for (i=0; i < data.length; i++){
             chart.series[i].setData(data[i], true);
         }
     }
-    
+
     // create the chart when all data is loaded
     function createChart(series) {
         $('#chart').highcharts('StockChart', {
             title : {
                 text : "Engagement Events"
+            },
+            exporting:{
+                url:'https://export.highcharts.com'
             },
             rangeSelector: {
                 buttons: [{
@@ -100,7 +103,7 @@ $(function () {
     };
 
     setSeries();
-    
+
 });
 </script>
 {% endblock %}

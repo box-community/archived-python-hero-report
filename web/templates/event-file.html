@@ -13,7 +13,7 @@ $(function () {
     events = ['UPLOAD', 'DOWNLOAD', 'DELETE'],
     display_name = ['Uploads', 'Downloads', 'Deletes']
     chartsCreated = false;
-     
+
     setSeries = function() {
         $.getJSON('stat?event_type=' + events.join(), function (data) {
             if (chartsCreated == false){
@@ -26,7 +26,7 @@ $(function () {
             }
         });
     };
-    
+
     function createCharts(data){
         console.log('creating charts')
 
@@ -37,13 +37,13 @@ $(function () {
                 data: data[i]
             });
         }
-        
+
         createChart(series);
         //createShortRangeChart(series);
     }
-    
+
     function updateCharts(data){
-        var chart = $("#chart").highcharts(); 
+        var chart = $("#chart").highcharts();
         for (i=0; i < data.length; i++){
             chart.series[i].setData(data[i], true);
         }
@@ -54,6 +54,9 @@ $(function () {
         $('#chart').highcharts('StockChart', {
             title : {
                 text : "File Events"
+            },
+            exporting:{
+                url:'https://export.highcharts.com'
             },
             rangeSelector: {
                 buttons: [{
@@ -102,7 +105,7 @@ $(function () {
     };
 
     function createShortRangeChart(series) {
-        $('#container_6H').highcharts('StockChart', {           
+        $('#container_6H').highcharts('StockChart', {
             rangeSelector: {
                 buttons: [{
                     count: 10,
@@ -128,7 +131,7 @@ $(function () {
     };
 
     setSeries();
-    
+
 });
 </script>
 {% endblock %}
