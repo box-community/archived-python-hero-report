@@ -15,8 +15,9 @@ This web app provides dynamic reporting for Box enterprises. (These instructions
 
 ### Gather Box Credentials
 
-1. Create a Box app with the 'manage an enterprise' scope.
-2. Use a [token generator application](https://box-oauth2-mvc.azurewebsites.net) to fetch an initial access/refresh token pair. The authorizing account **must** be a Box enterprise admin or co-admin and the Box app **must** have the "Manage an enterprise" scope enabled.
+1. Create a Box app with the following scopes:
+  * `manage an enterprise`
+2. Use a [token generator application](https://box-oauth2-mvc.azurewebsites.net) to fetch an initial access/refresh token pair. **Note:** The authorizing account **must** be a Box enterprise admin or co-admin.
 
 ### Create Docker Container
 
