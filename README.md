@@ -87,7 +87,7 @@ server {
 ```
 box-hero-report$ docker-compose run web /usr/local/bin/python create_db.py
 ```
-* List your Docker VMs and view the IP address for `dev` under the *URL* column. Open that IP address in a browser. The application is hosted on port 80.
+* List your Docker VMs and view the IP address for `dev` under the *URL* column. Open that IP address in a browser. For example, with a `dev` instance running at tcp://*192.168.99.100*:2376, you'd browse to https://*192.168.99.100*.
 ```
 box-hero-report$ docker-machine ls
 NAME      ACTIVE   DRIVER       STATE     URL                         SWARM
