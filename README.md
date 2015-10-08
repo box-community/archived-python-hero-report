@@ -56,6 +56,10 @@ $ docker-machine create -d azure --azure-subscription-id="SUBSCRIPTION-ID" --azu
 Creating Azure machine...
 To see how to connect Docker to this machine, run: docker-machine env MACHINE-NAME
 ```
+* In the Azure portal, from the left rail bowse to **Virtual Machines**
+* You should see a new virtual machine named `MACHINE-NAME`. Click on it and browse to the **Endpoints** tab.
+* Add an HTTPS endpoint. Click **Add** -> **Add A Stand-Alone Endpoint** -> **HTTPS** (from dropdown). Click the checkmark to save the endpoint.
+
 ### Configure SSL Certificates
 
 In order to authenticate with Box the web app must have SSL enabled.
