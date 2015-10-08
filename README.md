@@ -9,42 +9,66 @@ This web app provides dynamic reporting for Box enterprises. (These instructions
 * Provide an API to expose reporting information to other services
 * Use Docker to simplify boostrapping and deployment
 
-## Dev Deployment
+# Deployment
 
-*Note*: This application requires Docker, which works best on Mac or Linux.
+A few notes before we begin:
+  * This application requires Docker, which works best on Mac or Linux.
+  * Throughout these instructions we refer to our Docker VM by the name `MACHINE-NAME`. You can pick whatever name you want for your VM, for example `test`, `dev`, or `report-prod`. Name it such that you'll be able to recognize it later.
 
-### Create Docker Container
+## Prerequisites
 
 * Install [docker-compose](http://docs.docker.com/compose/install/) and [docker-machine](https://docs.docker.com/machine/#installation).
 * Clone this repository
 * Open a terminal shell
-* Create the virtual machine to host your Docker container
+
+## Create Docker VM
+
+### On Local Machine
+
+* Create the virtualbox vm to host your Docker container
 ```
-$ docker-machine create -d virtualbox dev
+$ docker-machine create -d virtualbox MACHINE-NAME
 Creating VirtualBox VM...
 Creating SSH key...
 Starting VirtualBox VM...
 Starting VM...
-To see how to connect Docker to this machine, run: docker-machine env test
+To see how to connect Docker to this machine, run: docker-machine env MACHINE-NAME
 ```
+
+### On Azure
+
+These deployment instructions were borrowed from [Microsoft's documentation](https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-docker-machine/).
+
+* Create management certs
+```
+$ openssl req -x509 -nodes -days 365 -newkey rsa:1024 -keyout mycert.pem -out mycert.pem
+$ openssl pkcs12 -export -out mycert.pfx -in mycert.pem -name "My Certificate"
+Enter Export Password: *****
+Verifying - Enter Export Password:  *****
+$ openssl x509 -inform pem -in mycert.pem -outform der -out mycert.cer
+```
+* Log into your Azure portal. From the left rail browse to **Settings**, then to the **Management Certificates** tab.
+* Click the **Upload** button and select the `mycert.cer` that you just created.
+* Browse to the **Subscriptions** tab. Note the *Subscription ID* of your Azure subscription.
+* Create the virtual machine in Azure
+```
+$ docker-machine create -d azure --azure-subscription-id="SUBSCRIPTION-ID" --azure-subscription-cert="mycert.pem" MACHINE-NAME
+Creating Azure machine...
+To see how to connect Docker to this machine, run: docker-machine env MACHINE-NAME
+```
+### Configure SSL Certificates
+
+In order to authenticate with Box the web app must have SSL enabled.
+
 * Make the `dev` VM your default
 ```
-$ eval "$(docker-machine env dev)"
+$ eval "$(docker-machine env MACHINE-NAME)"
 ```
 * Change to the directory when you cloned this repo
 ```
 $ cd ~/Documents/github/box-hero-report
 box-hero-report$
 ```
-* Build the Docker container. This will take a while.
-```
-box-hero-report$ docker-compose build
-box-hero-report$ docker-compose up -d
-```
-
-### Configure SSL Certificates
-
-In order to authenticate with Box the web app must have SSL enabled.
 
 #### To generate a self-signed test certificate/key pair
 
@@ -83,16 +107,21 @@ server {
 
 ### Run The Application
 
+* Build the Docker container. This will take a while.
+```
+box-hero-report$ docker-compose build
+box-hero-report$ docker-compose up -d
+```
 * Create the database
 ```
 box-hero-report$ docker-compose run web /usr/local/bin/python create_db.py
 ```
-* List your Docker VMs and view the IP address for `dev` under the *URL* column. Open that IP address in a browser. For example, with a `dev` instance running at tcp://*192.168.99.100*:2376, you'd browse to https://*192.168.99.100*.
+* List your Docker VMs and view the IP address for `MACHINE-NAME` under the *URL* column. Open that IP address in a browser. For example, with a `MACHINE-NAME` instance running at tcp://*HOST*:2376, you'd browse to https://*HOST*.
 ```
 box-hero-report$ docker-machine ls
-NAME      ACTIVE   DRIVER       STATE     URL                         SWARM
-default            virtualbox   Stopped
-dev       *        virtualbox   Running   tcp://192.168.99.100:2376
+NAME            ACTIVE   DRIVER       STATE     URL                         SWARM
+default                  virtualbox   Stopped
+MACHINE-NAME    *        <driver>     Running   tcp://HOST:2376
 ```
 
 ### Connect to Box
