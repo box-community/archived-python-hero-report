@@ -52,13 +52,18 @@ $ openssl x509 -inform pem -in mycert.pem -outform der -out mycert.cer
 * Browse to the **Subscriptions** tab. Note the *Subscription ID* of your Azure subscription.
 * Create the virtual machine in Azure
 ```
-$ docker-machine create -d azure --azure-subscription-id="SUBSCRIPTION-ID" --azure-subscription-cert="mycert.pem" MACHINE-NAME
+$ docker-machine create -d azure \
+                        --azure-subscription-id="SUBSCRIPTION-ID" \
+                        --azure-subscription-cert="mycert.pem" \ 
+                        MACHINE-NAME
 Creating Azure machine...
 To see how to connect Docker to this machine, run: docker-machine env MACHINE-NAME
 ```
-* In the Azure portal, from the left rail bowse to **Virtual Machines**
-* You should see a new virtual machine named `MACHINE-NAME`. Click on it and browse to the **Endpoints** tab.
-* Add an HTTPS endpoint. Click **Add** -> **Add A Stand-Alone Endpoint** -> **HTTPS** (from dropdown). Click the checkmark to save the endpoint.
+* Finally, we'll need to allow HTTP/HTTPS connections through the VM firewall. HTTP will automatically redirect to HTTPS. 
+  * In the Azure portal, from the left rail bowse to **Virtual Machines**
+  * You should see a new virtual machine named `MACHINE-NAME`. Click on it and browse to the **Endpoints** tab.
+  * Click **Add** -> **Add A Stand-Alone Endpoint** -> **HTTPS** (from dropdown). Click the checkmark to save the endpoint.
+  * Repeat the previous step to add an **HTTP** endpoint.
 
 ### Configure SSL Certificates
 
