@@ -14,6 +14,7 @@ from tasks import BackgroundTasks
 from box import Box
 from models import *
 
+tasks = BackgroundTasks(app.logger)
 
 @app.route('/', methods=['GET'])
 def index():
@@ -73,12 +74,38 @@ def velocity():
 		result.append(series)
 	return Response(json.dumps(result),  mimetype='application/json')
 
+@app.route('/usage/user', methods=['GET'])
+def usage_user():
+	return render_template('usage-user.html')
+
+@app.route('/usage/stat', methods=['GET'])
+def usage():
+	result = []
+	epoch = datetime.datetime.utcfromtimestamp(0)
+
+	event_types = request.args.get('type').split(',')
+	for event_type in event_types:
+		series = []
+		stats = Stat.query.filter(Stat.measure == event_type).order_by(Stat.starting.asc()).all()
+		for stat in stats:
+			series.append([(stat.starting - epoch).total_seconds() * 1000, stat.value])
+		result.append(series)
+	return Response(json.dumps(result),  mimetype='application/json')
+
+@app.route('/usage/trigger', methods=['GET'])
+def usage_trigger():
+	tasks.trigger_usage_job()
+	return Response(json.dumps("OK"),  mimetype='application/json')
+
+@app.route('/event/trigger', methods=['GET'])
+def event_trigger():
+	tasks.trigger_event_job()
+	return Response(json.dumps("OK"),  mimetype='application/json')
 
 @app.before_first_request
 def init():
 	app.logger.debug("Init pid {}".format(os.getpid()))
-	statrec = BackgroundTasks(app.logger)
-	statrec.schedule()
+	tasks.schedule()
 
 if __name__ == '__main__':
 	app.run(debug=False, use_reloader=False)

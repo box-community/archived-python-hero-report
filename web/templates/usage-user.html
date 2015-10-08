@@ -1,0 +1,20 @@
+{% extends "_base.iframe.html" %}
+
+{% block content %}
+
+<div id="chart"></div>
+
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript">
+$(function () {
+    chart.create( '#chart',
+                  300,
+                  'Usage Stats',
+                  'stat?type=',
+                  ['ACTIVE_USERS', 'INACTIVE_USERS', 'STORAGE_USED_GB'],
+                  ['Active', 'Inactive', 'Storage (GB)']);
+});
+</script>
+{% endblock %}

@@ -75,13 +75,64 @@ class BackgroundTasks(object):
 		try:
 			db.session.commit()
 		except:
-			self.logger.debug('Caught exception: {}'.format(e))
+			self.logger.debug('Caught exception when adding event stats: {}'.format(e))
 			db.session.rollback()
 		else:
 			self.logger.info("inserted %s unqiue users" % unique_user_count)
 
+	def get_users(self, client):
+		keep_going = True
+		result = []
 
+		try:
+			while keep_going:
+				users = client.user().get_enterprise_users(
+					offset=len(result),
+					limit=1000
+				)
+				result.extend(users['entries'])
+				self.logger.info("got {0}/{1} enterprise users...".format(len(result), users['total_count']))
+				keep_going = len(result) < users['total_count']
+
+			return result
+		except Exception as e:
+			self.logger.warn("Failed to fetch user data from Box: {0}".format(e))
+			return []
+
+	def record_usage(self):
+		client = Box(self.logger).client()
+		if client is None:
+			self.logger.warn("Client was not created. Users will not be fetched.")
+			return
+			
+		starting = datetime.datetime.now(datetime.timezone.utc).replace(minute=0, second=0, microsecond=0)
+		ending = starting + datetime.timedelta(days=1)
+		users = self.get_users(client)
+		active = len([elem for elem in users if elem['status'] == 'active'])
+		inactive = len([elem for elem in users if elem['status'] == 'inactive'])
+		storage_used = sum(map(lambda user: user['space_used'], users))
+		self.logger.debug("User stats: {0} active; {1} inactive; {2} GB used".format(active, inactive, storage_used/(1024*1024*1024)))
+		db.session.add(Stat('ACTIVE_USERS', active, starting, ending))
+		db.session.add(Stat('INACTIVE_USERS', inactive, starting, ending))
+		db.session.add(Stat('STORAGE_USED_GB', storage_used/(1024*1024*1024), starting, ending))
+		try:
+			db.session.commit()
+		except Exception as e:
+			self.logger.debug('Caught exception when adding user stats: {}'.format(e))
+			db.session.rollback()
+			
 	def schedule(self):
 		self.logger.info("Starting scheduler")
 		self.scheduler.start()
-		self.scheduler.add_job(self.record_velocity, 'interval', minutes=1)
+		self.scheduler.add_job(self.record_velocity, 'interval', minutes=1, coalesce=True)
+		self.logger.debug("Scheduled event job to run every minute")
+		self.scheduler.add_job(self.record_usage, 'interval', minutes=60, coalesce=True)
+		self.logger.debug("Scheduled usage job to run every hour")
+		
+	def trigger_usage_job(self):
+		self.scheduler.add_job(self.record_usage, 'date', run_date=datetime.datetime.now() + datetime.timedelta(seconds=1), coalesce=True)
+		self.logger.debug("Scheduled on-demand usage job")
+		
+	def trigger_event_job(self):
+		self.scheduler.add_job(self.record_velocity, 'date', run_date=datetime.datetime.now() + datetime.timedelta(seconds=1), coalesce=True)
+		self.logger.debug("Scheduled on-demand event job")
