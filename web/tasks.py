@@ -20,6 +20,7 @@ class BackgroundTasks(object):
 	velocity_event_types=['UPLOAD','DOWNLOAD','DELETE','COLLABORATION_INVITE','COLLABORATION_ACCEPT','LOGIN']
 	limit = 500
 	backfill_max_days = 14
+	backfill_max_
 
 	def __init__(self, logger):
 		self.logger = logger
@@ -84,14 +85,21 @@ class BackgroundTasks(object):
 			self.logger.info("inserted %s unqiue users" % unique_user_count)
 
 	def backfill_velocity(self):
-		# set backfill limit
-		backfill_limit = datetime.datetime.now(datetime.timezone.utc).replace(
-			second=0, microsecond=0) - datetime.timedelta(BackgroundTasks.backfill_max_days=14)
+		# set backfill end
+		backfill_end = datetime.datetime.now(datetime.timezone.utc).replace(
+			second=0, microsecond=0) - datetime.timedelta(days=BackgroundTasks.backfill_max_days)
 		oldest_record = db.session.query(func.min(Stat.starting)).one()[0]
 		oldest_record = pytz.utc.localize(oldest_record)
-		if backfill_limit < oldest_record:
-			backfill_limit = oldest_record
-		self.logger.info("backfill_limit: %s" % backfill_limit)
+		if backfill_end < oldest_record:
+			backfill_end = oldest_record
+		self.logger.info("backfill_end: %s" % backfill_end)
+		# set backfill start not to step on current record_velocity jobs
+		backfill_start = datetime.datetime.now(datetime.timezone.utc).replace(
+			second=0, microsecond=0) - datetime.timedelta(minutes=2)
+		# query for distinct db stat minutes
+		db_minutes = db.session.query(Stat.starting).filter(
+			Stat.starting>=backfill_end, Stat.starting<=backfill_start).distinct().all()
+		self.logger.info("select %s db_minutes" % len(db_minutes))
 
 	def get_users(self, client):
 		keep_going = True
