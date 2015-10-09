@@ -4,6 +4,7 @@ import os
 import fcntl
 import logging
 import datetime
+import pytz
 from app import db
 from box import Box
 from boxsdk import OAuth2
@@ -11,12 +12,14 @@ from boxsdk import Client
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.sql import exists
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.sql import func
 from models import Stat
 
 class BackgroundTasks(object):
 
 	velocity_event_types=['UPLOAD','DOWNLOAD','DELETE','COLLABORATION_INVITE','COLLABORATION_ACCEPT','LOGIN']
 	limit = 500
+	backfill_max_days = 14
 
 	def __init__(self, logger):
 		self.logger = logger
@@ -80,6 +83,16 @@ class BackgroundTasks(object):
 		else:
 			self.logger.info("inserted %s unqiue users" % unique_user_count)
 
+	def backfill_velocity(self):
+		# set backfill limit
+		backfill_limit = datetime.datetime.now(datetime.timezone.utc).replace(
+			second=0, microsecond=0) - datetime.timedelta(BackgroundTasks.backfill_max_days=14)
+		oldest_record = db.session.query(func.min(Stat.starting)).one()[0]
+		oldest_record = pytz.utc.localize(oldest_record)
+		if backfill_limit < oldest_record:
+			backfill_limit = oldest_record
+		self.logger.info("backfill_limit: %s" % backfill_limit)
+
 	def get_users(self, client):
 		keep_going = True
 		result = []
@@ -104,7 +117,7 @@ class BackgroundTasks(object):
 		if client is None:
 			self.logger.warn("Client was not created. Users will not be fetched.")
 			return
-			
+
 		starting = datetime.datetime.now(datetime.timezone.utc).replace(minute=0, second=0, microsecond=0)
 		ending = starting + datetime.timedelta(days=1)
 		users = self.get_users(client)
@@ -120,7 +133,7 @@ class BackgroundTasks(object):
 		except Exception as e:
 			self.logger.debug('Caught exception when adding user stats: {}'.format(e))
 			db.session.rollback()
-			
+
 	def schedule(self):
 		self.logger.info("Starting scheduler")
 		self.scheduler.start()
@@ -128,11 +141,14 @@ class BackgroundTasks(object):
 		self.logger.debug("Scheduled event job to run every minute")
 		self.scheduler.add_job(self.record_usage, 'interval', minutes=60, coalesce=True)
 		self.logger.debug("Scheduled usage job to run every hour")
-		
+		# backoff later
+		self.scheduler.add_job(self.backfill_velocity, 'interval', minutes=1, coalesce=True)
+		self.logger.debug("Scheduled backfill job to run every minute")
+
 	def trigger_usage_job(self):
 		self.scheduler.add_job(self.record_usage, 'date', run_date=datetime.datetime.now() + datetime.timedelta(seconds=1), coalesce=True)
 		self.logger.debug("Scheduled on-demand usage job")
-		
+
 	def trigger_event_job(self):
 		self.scheduler.add_job(self.record_velocity, 'date', run_date=datetime.datetime.now() + datetime.timedelta(seconds=1), coalesce=True)
 		self.logger.debug("Scheduled on-demand event job")
