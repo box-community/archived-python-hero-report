@@ -20,7 +20,7 @@ class BackgroundTasks(object):
 	velocity_event_types=['UPLOAD','DOWNLOAD','DELETE','COLLABORATION_INVITE','COLLABORATION_ACCEPT','LOGIN']
 	limit = 500
 	backfill_max_days = 14
-	backfill_max_minutes = 60
+	backfill_max_minutes = 60*8
 
 	def __init__(self, logger):
 		self.logger = logger
@@ -53,9 +53,12 @@ class BackgroundTasks(object):
 			self.logger.warn("Failed to fetch event data from Box: {0}".format(e))
 			return []
 
-	def record_velocity(self):
-		created_before = datetime.datetime.now(datetime.timezone.utc).replace(second=0, microsecond=0)
-		created_after = created_before + datetime.timedelta(minutes=-1)
+	def record_velocity(self, created_after=None):
+		if not created_after:
+			created_before = datetime.datetime.now(datetime.timezone.utc).replace(second=0, microsecond=0)
+			created_after = created_before + datetime.timedelta(minutes=-1)
+		else:
+			created_before = created_after + datetime.timedelta(minutes=1)
 		client = Box(self.logger).client()
 		if client is None:
 			self.logger.warn("Client was not created. Events will not be fetched.")
@@ -88,7 +91,7 @@ class BackgroundTasks(object):
 		# set backfill end
 		backfill_end = datetime.datetime.now(datetime.timezone.utc).replace(
 			second=0, microsecond=0) - datetime.timedelta(days=BackgroundTasks.backfill_max_days)
-		oldest_record = db.session.query(func.min(Stat.starting)).all()[0]
+		oldest_record = db.session.query(func.min(Stat.starting)).one()[0]
 		oldest_record = pytz.utc.localize(oldest_record)
 		if backfill_end < oldest_record:
 			backfill_end = oldest_record
@@ -100,17 +103,18 @@ class BackgroundTasks(object):
 		db_minutes = db.session.query(Stat.starting).filter(
 			Stat.starting>=backfill_end, Stat.starting<=backfill_start).distinct().all()
 		self.logger.info("select %s db_minutes" % len(db_minutes))
-		# find empty minutes
-		backfill_minutes = []
+		db_minutes = [pytz.utc.localize(m[0]) for m in db_minutes]
+		# find empty minutes and backfill
 		backfill_step = backfill_start
+		bc = 0
 		while backfill_step >= backfill_end:
 			if backfill_step not in db_minutes:
-				backfill_minutes.append(backfill_step)
-			if len(backfill_minutes) == backfill_max_minutes:
+				self.logger.info("backfilling minute %s" % backfill_step)
+				self.record_velocity(backfill_step)
+				bc += 1
+			if bc == BackgroundTasks.backfill_max_minutes:
 				break
 			backfill_step = backfill_step - datetime.timedelta(minutes=1)
-		self.logger.info("will backfill %s minutes" % len(backfill_minutes))
-
 
 	def get_users(self, client):
 		keep_going = True
@@ -161,8 +165,8 @@ class BackgroundTasks(object):
 		self.scheduler.add_job(self.record_usage, 'interval', minutes=60, coalesce=True)
 		self.logger.debug("Scheduled usage job to run every hour")
 		# backoff later
-		# self.scheduler.add_job(self.backfill_velocity, 'interval', minutes=1, coalesce=True)
-		# self.logger.debug("Scheduled backfill job to run every minute")
+		self.scheduler.add_job(self.backfill_velocity, 'interval', minutes=1, coalesce=True)
+		self.logger.debug("Scheduled backfill job to run every minute")
 
 	def trigger_usage_job(self):
 		self.scheduler.add_job(self.record_usage, 'date', run_date=datetime.datetime.now() + datetime.timedelta(seconds=1), coalesce=True)
