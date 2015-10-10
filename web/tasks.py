@@ -20,7 +20,7 @@ class BackgroundTasks(object):
 	velocity_event_types=['UPLOAD','DOWNLOAD','DELETE','COLLABORATION_INVITE','COLLABORATION_ACCEPT','LOGIN']
 	limit = 500
 	backfill_max_days = 14
-	backfill_max_
+	backfill_max_minutes = 60
 
 	def __init__(self, logger):
 		self.logger = logger
@@ -82,13 +82,13 @@ class BackgroundTasks(object):
 			self.logger.debug('Caught exception when adding event stats: {}'.format(e))
 			db.session.rollback()
 		else:
-			self.logger.info("inserted %s unqiue users" % unique_user_count)
+			self.logger.info("inserted %s unique users" % unique_user_count)
 
 	def backfill_velocity(self):
 		# set backfill end
 		backfill_end = datetime.datetime.now(datetime.timezone.utc).replace(
 			second=0, microsecond=0) - datetime.timedelta(days=BackgroundTasks.backfill_max_days)
-		oldest_record = db.session.query(func.min(Stat.starting)).one()[0]
+		oldest_record = db.session.query(func.min(Stat.starting)).all()[0]
 		oldest_record = pytz.utc.localize(oldest_record)
 		if backfill_end < oldest_record:
 			backfill_end = oldest_record
@@ -100,6 +100,17 @@ class BackgroundTasks(object):
 		db_minutes = db.session.query(Stat.starting).filter(
 			Stat.starting>=backfill_end, Stat.starting<=backfill_start).distinct().all()
 		self.logger.info("select %s db_minutes" % len(db_minutes))
+		# find empty minutes
+		backfill_minutes = []
+		backfill_step = backfill_start
+		while backfill_step >= backfill_end:
+			if backfill_step not in db_minutes:
+				backfill_minutes.append(backfill_step)
+			if len(backfill_minutes) == backfill_max_minutes:
+				break
+			backfill_step = backfill_step - datetime.timedelta(minutes=1)
+		self.logger.info("will backfill %s minutes" % len(backfill_minutes))
+
 
 	def get_users(self, client):
 		keep_going = True
@@ -150,8 +161,8 @@ class BackgroundTasks(object):
 		self.scheduler.add_job(self.record_usage, 'interval', minutes=60, coalesce=True)
 		self.logger.debug("Scheduled usage job to run every hour")
 		# backoff later
-		self.scheduler.add_job(self.backfill_velocity, 'interval', minutes=1, coalesce=True)
-		self.logger.debug("Scheduled backfill job to run every minute")
+		# self.scheduler.add_job(self.backfill_velocity, 'interval', minutes=1, coalesce=True)
+		# self.logger.debug("Scheduled backfill job to run every minute")
 
 	def trigger_usage_job(self):
 		self.scheduler.add_job(self.record_usage, 'date', run_date=datetime.datetime.now() + datetime.timedelta(seconds=1), coalesce=True)
