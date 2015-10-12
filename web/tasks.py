@@ -22,6 +22,7 @@ class BackgroundTasks(object):
 	limit = 500
 	backfill_max_days = 14 # default past days to backfill if stats are missing
 	backfill_max_hours = 8 # max hours per backfill run
+	backfill_marker = 'HOUR_COMPLETE'
 
 	def __init__(self, logger):
 		self.logger = logger
@@ -116,7 +117,7 @@ class BackgroundTasks(object):
 		# if 59 distinct minutes exist for this hour, mark as complete
 		if db.session.query(Stat.starting).filter(Stat.starting>=hour,
 		Stat.starting<=backfill_start).distinct().count() == 60:
-			stat = Stat('HOUR_COMPLETE', 1, hour, backfill_start)
+			stat = Stat(BackgroundTasks.backfill_marker, 1, hour, backfill_start)
 			db.session.add(stat)
 			try:
 				db.session.commit()
@@ -147,8 +148,9 @@ class BackgroundTasks(object):
 		self.logger.info("backfill %s to %s" % (backfill_start, backfill_end))
 		# query for completed hours
 		completed_hours = db.session.query(Stat.starting).filter(
-			Stat.measure=='HOUR_COMPLETE',Stat.starting>=backfill_end,
-			Stat.starting<=backfill_start).distinct().all()
+			Stat.measure==BackgroundTasks.backfill_marker,
+			Stat.starting>=backfill_end, Stat.starting<=backfill_start
+			).distinct().all()
 		completed_hours = [pytz.utc.localize(h[0]) for h in completed_hours]
 		self.logger.info("found %s completed hours" % len(completed_hours))
 		# loop and backfill as many as 'backfill_max_hours' incomplete hours
