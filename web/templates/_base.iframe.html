@@ -13,7 +13,7 @@
     <script src="//code.highcharts.com/stock/highstock.js"></script>
     <script src="//code.highcharts.com/stock/modules/exporting.js"></script>
     <script type="text/javascript">
-    // constructor    
+    // constructor
       var chart = (function (){
           // Add object properties like this
           var _id;
@@ -23,10 +23,10 @@
           var _event_types;
           var _event_labels;
           var _chartsCreated = false;
-      
+
           function createChart(data){
               console.log('creating charts')
-          
+
               var series = [];
               for (var i=0; i < data.length; i++){
                   series.push({
@@ -34,10 +34,11 @@
                       data: data[i]
                   });
               }
-          
+
               $(_id).highcharts('StockChart', {
                   chart: {
-                    height: _height
+                    height: _height,
+                    zoomType: 'y',
                   },
                   title : {
                       text : _title
@@ -71,14 +72,14 @@
                   series: series
               });
           }
-      
+
           function updateChart(data){
               var chart = $(_id).highcharts();
               for (var i=0; i < data.length; i++){
                   chart.series[i].setData(data[i], true);
               }
           }
-      
+
           function setSeries(){
               $.getJSON(_url + _event_types.join(), function (data) {
                       if (_chartsCreated == false){
@@ -91,7 +92,7 @@
                       }
                   });
           }
-          
+
           return {
               create: function(id, height, title, url, event_types, event_labels){
                   _id = id;
@@ -104,7 +105,7 @@
               },
           }
       }());
-    </script>    
+    </script>
     {% block js %}{% endblock %}
   </body>
 </html>
