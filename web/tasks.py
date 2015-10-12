@@ -215,7 +215,7 @@ class BackgroundTasks(object):
 		self.scheduler.add_job(self.record_usage, 'interval', minutes=60, coalesce=True)
 		self.logger.debug("Scheduled usage job to run every hour")
 		self.scheduler.add_job(self.backfill_velocity, 'interval', minutes=15, coalesce=True)
-		self.logger.debug("Scheduled backfill job to run every minute")
+		self.logger.debug("Scheduled backfill job to run every 15 minutes")
 
 	def trigger_usage_job(self):
 		self.scheduler.add_job(self.record_usage, 'date', run_date=datetime.datetime.now() + datetime.timedelta(seconds=1), coalesce=True)
