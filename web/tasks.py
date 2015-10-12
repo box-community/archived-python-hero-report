@@ -114,7 +114,7 @@ class BackgroundTasks(object):
 				mc += 1
 			minute_step = minute_step - datetime.timedelta(minutes=1)
 		self.logger.info("backfilled %s minutes in hour %s" % (mc, hour))
-		# if 59 distinct minutes exist for this hour, mark as complete
+		# if 60 distinct minutes exist for this hour, mark as complete
 		if db.session.query(Stat.starting).filter(Stat.starting>=hour,
 		Stat.starting<=backfill_start).distinct().count() == 60:
 			stat = Stat(BackgroundTasks.backfill_marker, 1, hour, backfill_start)
