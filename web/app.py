@@ -102,6 +102,11 @@ def event_trigger():
 	tasks.trigger_event_job()
 	return Response(json.dumps("OK"),  mimetype='application/json')
 
+@app.route('/event/backfill', methods=['GET'])
+def event_backfill():
+	tasks.trigger_event_backfill()
+	return Response(json.dumps("OK"),  mimetype='application/json')
+
 @app.before_first_request
 def init():
 	app.logger.debug("Init pid {}".format(os.getpid()))
