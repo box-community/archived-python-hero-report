@@ -95,7 +95,7 @@ class BackgroundTasks(object):
 		recorded."""
 		# start backfill at <hour>:59
 		backfill_start = hour + datetime.timedelta(minutes=59)
-		# make sure backfill_step isn't in the future
+		# make sure backfill_start isn't in the future
 		current_minute = datetime.datetime.now(datetime.timezone.utc).replace(second=0, microsecond=0)
 		if backfill_start >= current_minute:
 			backfill_start = current_minute - datetime.timedelta(minutes=2)
