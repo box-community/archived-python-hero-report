@@ -24,6 +24,32 @@ class BackgroundTasks(object):
 	backfill_max_hours = 8 # max hours per backfill run
 	backfill_marker = 'HOUR_COMPLETE'
 
+	sql = '''SELECT Ending as Starting, Starting as Ending 
+FROM
+    (
+        SELECT DISTINCT Starting, ROW_NUMBER() OVER (ORDER BY Starting) RN
+        FROM Stats T1
+        WHERE Measure IN ('{0}')
+			AND NOT EXISTS (
+                SELECT *
+                FROM Stats T2
+                WHERE T1.Starting > T2.Starting AND T1.Starting < T2.Ending
+            )
+        ) T1
+    JOIN (
+        SELECT DISTINCT Ending, ROW_NUMBER() OVER (ORDER BY Ending) RN
+        FROM Stats T1
+        WHERE Measure IN ('{0}')
+			AND NOT EXISTS (
+                SELECT *
+                FROM Stats T2
+                WHERE T1.Ending > T2.Starting AND T1.Ending < T2.Ending
+            )
+    ) T2
+    ON T1.RN - 1 = T2.RN
+WHERE
+    Ending < Starting;'''
+
 	def __init__(self, logger):
 		self.logger = logger
 		self.scheduler = BackgroundScheduler()
@@ -69,9 +95,10 @@ class BackgroundTasks(object):
 			return
 
 		events = self.get_velocity_events(client, BackgroundTasks.velocity_event_types, created_after, created_before)
-
+		self.logger.debug("  got {0} events from box starting {1}".format(len(events), created_after))
 		for event_type in BackgroundTasks.velocity_event_types:
 			count = len([elem for elem in events if elem['event_type'] == event_type])
+			self.logger.debug("   found {0} {1} events".format(count, event_type))
 			stat = Stat(event_type, count, created_after, created_before)
 			db.session.add(stat)
 			try:
@@ -82,6 +109,7 @@ class BackgroundTasks(object):
 
 		unique_user_count = len(set([elem['created_by']['login'] for elem in events]))
 		stat = Stat('UNIQUE_USERS', unique_user_count, created_after, created_before)
+		self.logger.debug("   found {0} UNIQUE_USERS".format(count, event_type))
 		db.session.add(stat)
 		try:
 			db.session.commit()
@@ -89,43 +117,6 @@ class BackgroundTasks(object):
 			self.logger.debug('Caught exception when adding event stats: {}'.format(e))
 			db.session.rollback()
 
-	def backfill_hour(self, hour):
-		"""Attempt to backfill all minutes in given hour. Assumes that if any
-		event type exists for a given minute, all velocity_event_types have been
-		recorded."""
-		# start backfill at <hour>:59
-		backfill_start = hour + datetime.timedelta(minutes=59)
-		# make sure backfill_start isn't in the future
-		current_minute = datetime.datetime.now(datetime.timezone.utc).replace(second=0, microsecond=0)
-		if backfill_start >= current_minute:
-			backfill_start = current_minute - datetime.timedelta(minutes=2)
-		self.logger.info("backfilling minutes %s to %s" % (
-			backfill_start, hour))
-		# load existing Stat.starting timestamps for this hour
-		db_minutes = db.session.query(Stat.starting).filter(
-			Stat.starting>=hour, Stat.starting<=backfill_start).distinct().all()
-		db_minutes = [pytz.utc.localize(m[0]) for m in db_minutes]
-		# loop through and backfill any missing minutes
-		mc = 0
-		minute_step = backfill_start
-		while minute_step >= hour:
-			if minute_step not in db_minutes:
-				self.record_velocity(minute_step)
-				mc += 1
-			minute_step = minute_step - datetime.timedelta(minutes=1)
-		self.logger.info("backfilled %s minutes in hour %s" % (mc, hour))
-		# if 60 distinct minutes exist for this hour, mark as complete
-		if db.session.query(Stat.starting).filter(Stat.starting>=hour,
-		Stat.starting<=backfill_start).distinct().count() == 60:
-			stat = Stat(BackgroundTasks.backfill_marker, 1, hour, backfill_start)
-			db.session.add(stat)
-			try:
-				db.session.commit()
-			except Exception as e:
-				self.logger.debug('Caught exception: {}'.format(e))
-				db.session.rollback()
-			else:
-				self.logger.info("marked hour %s as complete" % hour)
 
 	def backfill_velocity(self):
 		# find oldest hour in stat database
@@ -135,36 +126,23 @@ class BackgroundTasks(object):
 			# exit backfill if database is empty
 			self.logger.info("no database history found. exit backfill.")
 			return
-		oldest_hour = pytz.utc.localize(oldest_record[0]).replace(
-			minute=0, second=0, microsecond=0)
-		# set start and end backfill hours
-		backfill_start = datetime.datetime.now(
-			datetime.timezone.utc).replace(minute=0, second=0, microsecond=0)
-		backfill_end = backfill_start - datetime.timedelta(
-			days=BackgroundTasks.backfill_max_days)
-		# don't backfill beyond oldest database record
-		if backfill_end < oldest_hour:
-			backfill_end = oldest_hour
-		self.logger.info("backfill %s to %s" % (backfill_start, backfill_end))
-		# query for completed hours
-		completed_hours = db.session.query(Stat.starting).filter(
-			Stat.measure==BackgroundTasks.backfill_marker,
-			Stat.starting>=backfill_end, Stat.starting<=backfill_start
-			).distinct().all()
-		completed_hours = [pytz.utc.localize(h[0]) for h in completed_hours]
-		self.logger.info("found %s completed hours" % len(completed_hours))
-		# loop and backfill as many as 'backfill_max_hours' incomplete hours
-		hc = 0
-		hour_step = backfill_start
-		while hour_step >= backfill_end:
-			if hour_step not in completed_hours:
-				self.logger.info("backfilling hour %s" % hour_step)
-				self.backfill_hour(hour_step)
-				hc += 1
-			if hc == BackgroundTasks.backfill_max_hours:
-				break
-			hour_step = hour_step - datetime.timedelta(hours=1)
-		self.logger.info("backfilled %s hours" % hc)
+
+		# get all date/time gaps for event measures
+		query = BackgroundTasks.sql.format("','".join(BackgroundTasks.velocity_event_types))
+		gaps = db.engine.execute(query)
+		
+		self.logger.info("found {0} event gap(s) to backfill", len(gaps))
+		
+		for gap in gaps:
+			starting = gap[0]	
+			ending = gap[1]	
+			# process each gap...
+			while starting != ending:
+				self.logger.info("backfilling events starting: {0}".format(starting))
+				self.record_velocity(starting)
+				# ...incrementing by 1 minute until the entire gap is filled
+				starting = starting + datetime.timedelta(minutes=1)
+				
 
 	def get_users(self, client):
 		keep_going = True
@@ -224,3 +202,7 @@ class BackgroundTasks(object):
 	def trigger_event_job(self):
 		self.scheduler.add_job(self.record_velocity, 'date', run_date=datetime.datetime.now() + datetime.timedelta(seconds=1), coalesce=True)
 		self.logger.debug("Scheduled on-demand event job")
+
+	def trigger_event_backfill(self):
+		self.scheduler.add_job(self.backfill_velocity, 'date', run_date=datetime.datetime.now() + datetime.timedelta(seconds=1), coalesce=True)
+		self.logger.debug("Scheduled on-demand event backfill")
