@@ -1,6 +1,8 @@
 # Box Hero Reports
 
-This web app provides dynamic reporting for Box enterprises. (These instructions will be fleshed out over time.)
+This web app provides dynamic reporting for Box enterprises. 
+
+[See it in action](https://box-hero-reports-test.cloudapp.net).
 
 ## Goals
 
