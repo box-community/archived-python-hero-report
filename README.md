@@ -2,7 +2,7 @@
 
 This web app provides dynamic reporting for Box enterprises. 
 
-[See it in action](https://box-hero-reports-test.cloudapp.net).
+[See it in action](https://box-hero-reports-test.cloudapp.net) (takes a moment to load up all the data!).
 
 ## Goals
 
